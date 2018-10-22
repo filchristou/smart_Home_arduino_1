@@ -184,9 +184,12 @@ void rgbLed(int r, int g, int b) {
 }
 
 //---------------------------Wattometer---------------------------//
-const int voltagePin = A1;  //analog
-const int currentPinD = A3;
+const int voltagePinU = A1;  //analog
 const int currentPinU = A2;
+
+const int voltagePinD = A0;  //analog
+const int currentPinD = A3;
+
 const float R1 = 30000.0;
 const float R2 = 7500.0;
 
@@ -196,13 +199,15 @@ void sendWatts()
   int curReadU = 0;
   float currentInD = 0;
   int curReadD = 0;
-  float voltageIn = 0; 
+  float voltageInU = 0; 
+  float voltageInD = 0; 
   //basically a voltage divider :
   // *sensorValue = analogRead(voltagePin);
   // *Vout = (sensorValue * 5.0) / 1024.0 ;
   // *voltageIn = Vout / (R2 / R1 + R2); 
   //voltage
-  voltageIn = ((analogRead(voltagePin) * 5.0)/ 1024.0) / (R2/(R1+R2));
+  voltageInU = ((analogRead(voltagePinU) * 5.0)/ 1024.0) / (R2/(R1+R2));
+  voltageInD = ((analogRead(voltagePinD) * 5.0)/ 1024.0) / (R2/(R1+R2));
   //current from Up circuit
   curReadU = analogRead(currentPinU);
   currentInU = (curReadU * 5.0 )/ 1024.0; // scale the ADC  
@@ -211,7 +216,7 @@ void sendWatts()
   currentInD = (curReadD * 5.0 )/ 1024.0; // scale the ADC  
 
   
-  String wattReport = "W:" + String(voltageIn*currentInU) + ',' + String(voltageIn*currentInD) + '\n' + "$!\n"; //Dollar means stream
+  String wattReport = "W:" + String(voltageInU*currentInU) + ',' + String(voltageInD*currentInD) + '\n' + "$!\n"; //Dollar means stream
   Serial.print(wattReport);
   
 }
@@ -228,7 +233,6 @@ String getTotalReport()
   send_report = send_report + '6' + ':' + String(moisture()) + '\n';
   send_report = send_report + '7' + ':' + String(luminocity()) + '\n';
   send_report = send_report + '8' + ':' + String(distance1()) + '\n';
-  send_report = send_report + '9' + ':' + String(magnito()) + '\n';
 
   return send_report;
 }
@@ -247,7 +251,8 @@ void setup() {
   digitalWrite(relayPinU, 1);
   digitalWrite(relayPinD, 1);
 
-  pinMode(voltagePin, INPUT);
+  pinMode(voltagePinU, INPUT);
+  pinMode(voltagePinD, INPUT);
   pinMode(currentPinD, INPUT);
   pinMode(currentPinU, INPUT);
   pinMode(luminPin, INPUT);
@@ -431,10 +436,10 @@ void loop() {
   }
 
   
-  //check if 1 minute passed,so that I give my report.
+  //check if 30 minute passed,so that I give my report.
   
   
-  if (millis() - current_time_report > 60000)
+  if (millis() - current_time_report > 1800000)
   {
     String send_report = getTotalReport();
     
